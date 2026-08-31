@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PizzaCard</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: #F4F1EA;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+  .card {
+    width: 100%;
+    max-width: 420px;
+  }
+  .hero {
+    background: #111111;
+    border-radius: 24px;
+    padding: 40px 24px 32px;
+    text-align: center;
+  }
+  .logo {
+    width: 76px;
+    height: 76px;
+    border-radius: 18px;
+    background: #E8542E;
+    margin: 0 auto 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .name {
+    font-size: 26px;
+    font-weight: 600;
+    color: #FFFFFF;
+    letter-spacing: -0.02em;
+  }
+  .slogan {
+    font-size: 14px;
+    color: #B8B8B8;
+    margin-top: 6px;
+  }
+  .nav {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-top: 20px;
+  }
+  .nav a {
+    text-decoration: none;
+    background: #FFFFFF;
+    border: 1px solid #E4E0D6;
+    border-radius: 16px;
+    padding: 24px 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    transition: transform 0.15s ease, border-color 0.15s ease;
+  }
+  .nav a:active {
+    transform: scale(0.97);
+  }
+  .nav a:hover {
+    border-color: #E8542E;
+  }
+  .nav svg {
+    width: 28px;
+    height: 28px;
+  }
+  .nav span {
+    font-size: 14px;
+    font-weight: 500;
+    color: #1A1A1A;
+  }
+  footer {
+    text-align: center;
+    margin-top: 24px;
+    font-size: 12px;
+    color: #9A968C;
+  }
+</style>
+</head>
+<body>
+  <div class="card">
+    <div class="hero">
+      <div class="logo">
+        <svg viewBox="0 0 100 100" fill="none">
+          <path d="M50 20 L78 76 Q50 90 22 76 Z" fill="#F0C674"/>
+          <circle cx="42" cy="44" r="4" fill="#E8542E"/>
+          <circle cx="58" cy="53" r="3.5" fill="#E8542E"/>
+          <circle cx="48" cy="63" r="3" fill="#E8542E"/>
+        </svg>
+      </div>
+      <div class="name">PizzaCard</div>
+      <div class="slogan">O sabor de vender sem complicação</div>
+    </div>
+
+    <div class="nav">
+      <a href="cardapio-3.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#E8542E" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+        <span>Cardápio</span>
+      </a>
+      <a href="cozinha-7-1.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#E8542E" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 13.87A4 4 0 0 1 7.41 6a5.11 5.11 0 0 1 1.05-1.54 5 5 0 0 1 7.08 0A5.11 5.11 0 0 1 16.59 6 4 4 0 0 1 18 13.87V21H6Z"/><line x1="6" y1="17" x2="18" y2="17"/></svg>
+        <span>Cozinha</span>
+      </a>
+      <a href="motoboy.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#E8542E" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="5.5" cy="17.5" r="3.5"/><circle cx="18.5" cy="17.5" r="3.5"/><path d="M15 6a1 1 0 0 0-1 1v6h4l3 4"/><path d="M9 17.5V14l-3-3 4-3 2 3h2"/></svg>
+        <span>Entregas</span>
+      </a>
+      <a href="painel.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#E8542E" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        <span>Painel</span>
+      </a>
+    </div>
+
+    <footer>Fernando · 2P Consultoria de IA</footer>
+  </div>
+</body>
+</html>
