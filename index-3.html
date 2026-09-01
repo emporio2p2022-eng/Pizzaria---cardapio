@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pizza Card</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --preto: #17130F;
+    --preto-2: #221C16;
+    --tomate: #E8542E;
+    --tomate-escuro: #C6431F;
+    --dourado: #F0C674;
+    --creme: #F4F1EA;
+    --creme-escuro: #E4E0D6;
+    --texto-suave: #9A968C;
+  }
+  body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    background: var(--creme);
+    background-image:
+      radial-gradient(circle at 10% 5%, rgba(232,84,46,0.06) 0%, transparent 45%),
+      radial-gradient(circle at 90% 90%, rgba(240,198,116,0.10) 0%, transparent 40%);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    -webkit-font-smoothing: antialiased;
+  }
+  .card {
+    width: 100%;
+    max-width: 420px;
+  }
+  .hero {
+    position: relative;
+    background: linear-gradient(160deg, var(--preto-2) 0%, var(--preto) 100%);
+    border-radius: 28px;
+    padding: 44px 24px 36px;
+    text-align: center;
+    overflow: hidden;
+    box-shadow: 0 20px 40px -12px rgba(23,19,15,0.35);
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: -60px;
+    right: -60px;
+    width: 180px;
+    height: 180px;
+    background: radial-gradient(circle, rgba(232,84,46,0.25) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(240,198,116,0.12);
+    border: 1px solid rgba(240,198,116,0.28);
+    color: var(--dourado);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    padding: 5px 12px;
+    border-radius: 999px;
+    margin-bottom: 22px;
+  }
+  .badge::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--dourado);
+  }
+  .logo {
+    width: 80px;
+    height: 80px;
+    border-radius: 22px;
+    background: linear-gradient(155deg, var(--tomate) 0%, var(--tomate-escuro) 100%);
+    margin: 0 auto 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 12px 24px -8px rgba(232,84,46,0.55), inset 0 1px 0 rgba(255,255,255,0.15);
+    position: relative;
+    z-index: 1;
+  }
+  .name {
+    font-family: 'Outfit', sans-serif;
+    font-size: 30px;
+    font-weight: 700;
+    color: #FFFFFF;
+    letter-spacing: -0.02em;
+    position: relative;
+    z-index: 1;
+  }
+  .slogan {
+    font-size: 14px;
+    font-weight: 500;
+    color: #B8B2A6;
+    margin-top: 8px;
+    position: relative;
+    z-index: 1;
+  }
+  .nav {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-top: 20px;
+  }
+  .nav a {
+    text-decoration: none;
+    background: #FFFFFF;
+    border: 1px solid var(--creme-escuro);
+    border-radius: 18px;
+    padding: 26px 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+  .nav a:active {
+    transform: scale(0.97);
+  }
+  .nav a:hover {
+    border-color: var(--tomate);
+    box-shadow: 0 10px 20px -10px rgba(232,84,46,0.35);
+  }
+  .icon-wrap {
+    width: 44px;
+    height: 44px;
+    border-radius: 14px;
+    background: linear-gradient(155deg, #FFF3EC 0%, #FDE8DC 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .nav svg {
+    width: 22px;
+    height: 22px;
+  }
+  .nav span {
+    font-family: 'Outfit', sans-serif;
+    font-size: 14.5px;
+    font-weight: 600;
+    color: #1A1A1A;
+  }
+  footer {
+    text-align: center;
+    margin-top: 26px;
+    font-size: 12px;
+    color: var(--texto-suave);
+    letter-spacing: 0.01em;
+  }
+</style>
+</head>
+<body>
+  <div class="card">
+    <div class="hero">
+      <div class="badge">Sistema para pizzarias</div>
+      <div class="logo">
+        <svg viewBox="0 0 100 100" fill="none">
+          <path d="M50 20 L78 76 Q50 90 22 76 Z" fill="#F0C674"/>
+          <circle cx="42" cy="44" r="4" fill="#E8542E"/>
+          <circle cx="58" cy="53" r="3.5" fill="#E8542E"/>
+          <circle cx="48" cy="63" r="3" fill="#E8542E"/>
+        </svg>
+      </div>
+      <div class="name">Pizza Card</div>
+      <div class="slogan">O sabor de vender sem complicação</div>
+    </div>
+
+    <div class="nav">
+      <a href="cardapio-3.html">
+        <div class="icon-wrap">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#E8542E" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+        </div>
+        <span>Cardápio</span>
+      </a>
+      <a href="cozinha-7-1-1.html">
+        <div class="icon-wrap">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#E8542E" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 13.87A4 4 0 0 1 7.41 6a5.11 5.11 0 0 1 1.05-1.54 5 5 0 0 1 7.08 0A5.11 5.11 0 0 1 16.59 6 4 4 0 0 1 18 13.87V21H6Z"/><line x1="6" y1="17" x2="18" y2="17"/></svg>
+        </div>
+        <span>Cozinha</span>
+      </a>
+      <a href="motoboy-3.html">
+        <div class="icon-wrap">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#E8542E" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="5.5" cy="17.5" r="3.5"/><circle cx="18.5" cy="17.5" r="3.5"/><path d="M15 6a1 1 0 0 0-1 1v6h4l3 4"/><path d="M9 17.5V14l-3-3 4-3 2 3h2"/></svg>
+        </div>
+        <span>Entregas</span>
+      </a>
+      <a href="painel.html">
+        <div class="icon-wrap">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#E8542E" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        </div>
+        <span>Painel</span>
+      </a>
+    </div>
+
+    <footer>Fernando · 2P Consultoria de IA</footer>
+  </div>
+</body>
+</html>
