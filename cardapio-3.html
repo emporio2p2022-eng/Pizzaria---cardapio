@@ -1,0 +1,1031 @@
+<!DOCTYPE html>
+<html lang="pt-BR" translate="no">
+<head>
+<meta charset="UTF-8">
+<meta name="google" content="notranslate">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Cardápio — Pizzaria</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<style>
+  :root{
+    --bg: #1A1613;
+    --bg-elev: #211C18;
+    --card: #26201B;
+    --card-border: #3A322A;
+    --text: #F2EAE0;
+    --text-dim: #A89A8A;
+    --text-faint: #6E6255;
+    --tomate: #E85D3F;
+    --tomate-bg: rgba(232,93,63,0.10);
+    --gold: #D9A94F;
+    --gold-bg: rgba(217,169,79,0.12);
+    --emerald: #4FA876;
+    --emerald-bg: rgba(79,168,118,0.10);
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color: transparent;}
+  html,body{margin:0; padding:0; background:var(--bg); color:var(--text); font-family:'Inter',sans-serif;}
+  body{padding-bottom:90px;}
+  h1,h2,h3{font-family:'Oswald',sans-serif; margin:0;}
+  button{font-family:inherit;}
+
+  /* ---------- HEADER ---------- */
+  header{
+    position:sticky; top:0; z-index:10; background:var(--bg-elev);
+    border-bottom:1px solid var(--card-border); padding:16px 18px 0;
+  }
+  .header-top{display:flex; align-items:center; gap:10px; margin-bottom:14px;}
+  .header-top .emoji{font-size:26px;}
+  header h1{font-size:20px; font-weight:600;}
+  .tabs{display:flex; gap:8px; overflow-x:auto; padding-bottom:12px; scrollbar-width:none;}
+  .tabs::-webkit-scrollbar{display:none;}
+  .tab{
+    flex-shrink:0; padding:8px 16px; border-radius:20px; border:1px solid var(--card-border);
+    background:var(--card); color:var(--text-dim); font-size:14px; font-weight:600; cursor:pointer;
+    white-space:nowrap;
+  }
+  .tab.ativa{background:var(--tomate); border-color:var(--tomate); color:#fff;}
+
+  /* ---------- LISTA DE PRODUTOS ---------- */
+  main{padding:16px; max-width:640px; margin:0 auto;}
+  .categoria-titulo{font-size:18px; font-weight:600; margin:18px 0 12px;}
+  .categoria-titulo:first-child{margin-top:0;}
+
+  .produto{
+    background:var(--card); border:1px solid var(--card-border); border-radius:14px;
+    padding:14px; margin-bottom:12px; display:flex; align-items:center; justify-content:space-between; gap:12px;
+  }
+  .produto-info{flex:1; min-width:0;}
+  .produto-nome{font-size:16px; font-weight:600; margin-bottom:4px;}
+  .produto-desc{font-size:13px; color:var(--text-dim); line-height:1.4;}
+  .produto-preco{font-size:14px; color:var(--gold); font-weight:600; margin-top:6px;}
+  .btn-add{
+    flex-shrink:0; background:var(--tomate); color:#fff; border:none; border-radius:10px;
+    padding:10px 16px; font-weight:600; font-size:14px; cursor:pointer; font-family:'Oswald',sans-serif;
+  }
+  .btn-add:active{transform:scale(0.96);}
+
+  .empty-cat{color:var(--text-faint); font-size:14px; text-align:center; padding:20px;}
+
+  /* ---------- CARRINHO FLUTUANTE ---------- */
+  #barraCarrinho{
+    position:fixed; left:16px; right:16px; bottom:16px; z-index:20;
+    background:var(--tomate); border-radius:14px; padding:14px 18px;
+    display:none; align-items:center; justify-content:space-between;
+    box-shadow:0 8px 24px rgba(0,0,0,0.4); cursor:pointer;
+  }
+  #barraCarrinho.mostrar{display:flex;}
+  #barraCarrinho .esquerda{display:flex; align-items:center; gap:10px; color:#fff;}
+  #barraCarrinho .badge{
+    background:rgba(255,255,255,0.25); border-radius:50%; width:26px; height:26px;
+    display:flex; align-items:center; justify-content:center; font-weight:700; font-size:14px;
+  }
+  #barraCarrinho .texto{font-family:'Oswald',sans-serif; font-weight:600; font-size:15px;}
+  #barraCarrinho .total{font-family:'Oswald',sans-serif; font-weight:700; font-size:17px; color:#fff;}
+
+  /* ---------- OVERLAYS (modais) ---------- */
+  .overlay{
+    position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:30;
+    display:none; align-items:flex-end; justify-content:center;
+  }
+  .overlay.mostrar{display:flex;}
+  .painel{
+    background:var(--bg-elev); width:100%; max-width:640px; max-height:92vh; overflow-y:auto;
+    border-radius:20px 20px 0 0; padding:20px; padding-bottom:32px;
+  }
+  .painel-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;}
+  .painel-head h2{font-size:19px; font-weight:600;}
+  .fechar{background:none; border:none; color:var(--text-dim); font-size:22px; cursor:pointer; line-height:1; padding:4px;}
+
+  .campo{margin-bottom:16px;}
+  .campo label{display:block; font-size:13.5px; color:var(--text-dim); margin-bottom:6px; font-weight:500;}
+  .campo input[type=text], .campo input[type=tel], .campo textarea, .campo select{
+    width:100%; background:var(--card); border:1px solid var(--card-border); color:var(--text);
+    border-radius:10px; padding:12px 14px; font-size:15px; font-family:inherit;
+  }
+  .campo textarea{resize:vertical; min-height:60px;}
+
+  .opcoes{display:flex; flex-direction:column; gap:8px;}
+  .opcao{
+    display:flex; align-items:center; gap:10px; background:var(--card); border:1px solid var(--card-border);
+    border-radius:10px; padding:12px 14px; cursor:pointer; font-size:15px;
+  }
+  .opcao.selecionada{border-color:var(--tomate); background:var(--tomate-bg);}
+  .opcao input{accent-color:var(--tomate); width:18px; height:18px;}
+  .opcao .rotulo{flex:1;}
+  .opcao .preco-extra{color:var(--gold); font-size:13.5px; font-weight:600;}
+
+  .grid2{display:grid; grid-template-columns:1fr 1fr; gap:8px;}
+
+  .stepper{display:flex; align-items:center; gap:14px;}
+  .stepper button{
+    width:36px; height:36px; border-radius:50%; border:1px solid var(--card-border);
+    background:var(--card); color:var(--text); font-size:18px; cursor:pointer; font-weight:600;
+  }
+  .stepper span{font-family:'Oswald',sans-serif; font-size:18px; font-weight:600; min-width:20px; text-align:center;}
+
+  .btn-primario{
+    width:100%; background:var(--tomate); color:#fff; border:none; border-radius:12px;
+    padding:15px; font-size:16px; font-weight:600; font-family:'Oswald',sans-serif; cursor:pointer;
+  }
+  .btn-primario:active{transform:scale(0.98);}
+  .btn-primario:disabled{opacity:0.5;}
+  .btn-secundario{
+    width:100%; background:var(--card); color:var(--text); border:1px solid var(--card-border); border-radius:12px;
+    padding:13px; font-size:14.5px; font-weight:600; font-family:'Oswald',sans-serif; cursor:pointer; margin-top:8px;
+  }
+
+  .resumo-preco{
+    display:flex; align-items:center; justify-content:space-between; padding:14px 0;
+    border-top:1px solid var(--card-border); margin-top:6px; margin-bottom:14px;
+  }
+  .resumo-preco .valor{font-family:'Oswald',sans-serif; font-size:22px; font-weight:700; color:var(--gold);}
+
+  /* item no carrinho */
+  .item-carrinho{
+    display:flex; justify-content:space-between; align-items:flex-start; gap:10px;
+    padding:12px 0; border-bottom:1px solid var(--card-border);
+  }
+  .item-carrinho .desc{flex:1;}
+  .item-carrinho .desc .nome{font-weight:600; font-size:15px;}
+  .item-carrinho .desc .detalhe{font-size:13px; color:var(--text-dim); margin-top:2px;}
+  .item-carrinho .preco{font-family:'Oswald',sans-serif; font-weight:600; color:var(--gold); font-size:15px; white-space:nowrap;}
+  .item-carrinho .remover{background:none; border:none; color:var(--text-faint); font-size:13px; cursor:pointer; margin-top:4px;}
+
+  .linha-total{display:flex; justify-content:space-between; padding:8px 0; font-size:14.5px; color:var(--text-dim);}
+  .linha-total.grande{font-size:18px; color:var(--text); font-weight:600; font-family:'Oswald',sans-serif; padding-top:12px; border-top:1px solid var(--card-border);}
+  .linha-total .valor-destaque{color:var(--gold);}
+
+  /* confirmação final */
+  #telaConfirmacao{display:none; position:fixed; inset:0; z-index:40; background:var(--bg);
+    flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:24px;}
+  #telaConfirmacao.mostrar{display:flex;}
+  #telaConfirmacao .check{font-size:56px; margin-bottom:16px;}
+  #telaConfirmacao h2{font-size:24px; margin-bottom:8px;}
+  #telaConfirmacao .numero{font-family:'Oswald',sans-serif; font-size:44px; font-weight:700; color:var(--emerald); margin:10px 0;}
+  #telaConfirmacao p{color:var(--text-dim); font-size:15px; line-height:1.5; max-width:320px;}
+
+  .loading-tela{display:flex; align-items:center; justify-content:center; min-height:60vh; color:var(--text-faint);}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-top">
+    <span class="emoji">🍕</span>
+    <h1 id="nomePizzaria">Cardápio</h1>
+  </div>
+  <div class="tabs" id="tabsCategorias"></div>
+</header>
+
+<main id="listaProdutos">
+  <div class="loading-tela">Carregando cardápio...</div>
+</main>
+
+<div id="barraCarrinho">
+  <div class="esquerda">
+    <span class="badge" id="badgeQtd">0</span>
+    <span class="texto">Ver carrinho</span>
+  </div>
+  <span class="total" id="totalCarrinho">R$ 0,00</span>
+</div>
+
+<!-- overlay: montar pizza -->
+<div class="overlay" id="overlayPizza">
+  <div class="painel" id="painelPizza"></div>
+</div>
+
+<!-- overlay: carrinho -->
+<div class="overlay" id="overlayCarrinho">
+  <div class="painel" id="painelCarrinho"></div>
+</div>
+
+<!-- overlay: checkout -->
+<div class="overlay" id="overlayCheckout">
+  <div class="painel" id="painelCheckout"></div>
+</div>
+
+<!-- tela final -->
+<div id="telaConfirmacao">
+  <div class="check">✅</div>
+  <h2>Pedido enviado!</h2>
+  <div class="numero" id="numeroConfirmado">#0</div>
+  <p id="textoConfirmacao">Seu pedido já está sendo preparado. Fique de olho no WhatsApp para acompanhar.</p>
+  <button class="btn-secundario" style="max-width:280px; margin-top:24px;" onclick="location.reload()">Fazer novo pedido</button>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://udqsxybmoomokgmhhubh.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_y-3D9y_mQP5SvmUbVmbClg_5YSgU2sX';
+
+// mostra qualquer erro inesperado na tela (em vez de travar silenciosamente),
+// pra dar pra ver o que aconteceu e mandar print
+window.addEventListener('error', (ev) => {
+  mostrarErroNaTela(ev.message || 'Erro desconhecido');
+});
+window.addEventListener('unhandledrejection', (ev) => {
+  mostrarErroNaTela((ev.reason && ev.reason.message) || 'Erro de conexão');
+});
+function mostrarErroNaTela(msg){
+  let banner = document.getElementById('bannerErro');
+  if(!banner){
+    banner = document.createElement('div');
+    banner.id = 'bannerErro';
+    banner.style.cssText = 'position:fixed; left:12px; right:12px; bottom:12px; z-index:999; background:#E85D3F; color:#fff; padding:14px; border-radius:10px; font-size:13px; font-family:sans-serif; box-shadow:0 4px 16px rgba(0,0,0,0.4);';
+    document.body.appendChild(banner);
+  }
+  banner.textContent = '⚠️ Deu um erro: ' + msg + ' (tira um print e manda pro suporte)';
+}
+
+const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// ---------------- ESTADO GLOBAL ----------------
+let ref = {
+  categorias: [], tamanhos: [], sabores: [], precos: [], bordas: [],
+  adicionais: [], bebidas: [], combos: [], areasEntrega: [], config: null
+};
+let carrinho = []; // itens do pedido
+let categoriaAtiva = null;
+
+function formatarPreco(v){
+  return 'R$ ' + Number(v || 0).toFixed(2).replace('.', ',');
+}
+
+// ---------------- CARREGAR CARDÁPIO ----------------
+async function carregarCardapio(tentativa){
+  tentativa = tentativa || 1;
+  let resultado;
+  try {
+    resultado = await Promise.all([
+      client.from('categorias').select('*').eq('ativo', true).order('ordem'),
+      client.from('tamanhos').select('*').eq('ativo', true).order('ordem'),
+      client.from('sabores').select('*').eq('ativo', true).order('nome'),
+      client.from('precos_sabor_tamanho').select('*'),
+      client.from('bordas').select('*').eq('ativo', true).order('preco'),
+      client.from('adicionais').select('*').eq('ativo', true).order('nome'),
+      client.from('bebidas').select('*').eq('ativo', true).order('nome'),
+      client.from('combos').select('*').eq('ativo', true).order('nome'),
+      client.from('areas_entrega').select('*').eq('ativo', true).order('bairro'),
+      client.from('config_sistema').select('*').eq('id', 1).single(),
+    ]);
+  } catch(e){
+    resultado = null;
+  }
+
+  const [cat, tam, sab, prc, bor, adi, beb, com, area, cfg] = resultado || [];
+  const houveErro = !resultado || [cat,tam,sab,prc,bor,adi,beb,com,area].some(r => r && r.error);
+
+  if(houveErro && tentativa < 4){
+    document.getElementById('listaProdutos').innerHTML = `<div class="loading-tela">Conectando... (tentativa ${tentativa})</div>`;
+    setTimeout(() => carregarCardapio(tentativa + 1), 1500);
+    return;
+  }
+
+  ref.categorias = (cat && cat.data) || [];
+  ref.tamanhos = (tam && tam.data) || [];
+  ref.sabores = (sab && sab.data) || [];
+  ref.precos = (prc && prc.data) || [];
+  ref.bordas = (bor && bor.data) || [];
+  ref.adicionais = (adi && adi.data) || [];
+  ref.bebidas = (beb && beb.data) || [];
+  ref.combos = (com && com.data) || [];
+  ref.areasEntrega = (area && area.data) || [];
+  ref.config = (cfg && cfg.data) || {nome_pizzaria:'Pizzaria', regra_meio_a_meio:'mais_caro', aceita_pix_antecipado:true, aceita_pix_entrega:true, aceita_cartao_entrega:true, aceita_dinheiro:true};
+
+  document.getElementById('nomePizzaria').textContent = ref.config.nome_pizzaria || 'Cardápio';
+
+  montarTabs();
+  if(ref.categorias.length > 0){
+    categoriaAtiva = ref.categorias[0].nome;
+    renderizarProdutos();
+  } else {
+    document.getElementById('listaProdutos').innerHTML = `
+      <div class="empty-cat">
+        Não consegui carregar o cardápio.<br><br>
+        <button class="btn-secundario" style="max-width:220px; margin:0 auto;" onclick="carregarCardapio()">Tentar de novo</button>
+      </div>`;
+  }
+}
+
+function montarTabs(){
+  const tabsEl = document.getElementById('tabsCategorias');
+  tabsEl.innerHTML = '';
+  ref.categorias.forEach(c => {
+    const tab = document.createElement('div');
+    tab.className = 'tab' + (c.nome === categoriaAtiva ? ' ativa' : '');
+    tab.textContent = c.nome;
+    tab.addEventListener('click', () => {
+      categoriaAtiva = c.nome;
+      montarTabs();
+      renderizarProdutos();
+    });
+    tabsEl.appendChild(tab);
+  });
+}
+
+function precoBaseSabor(saborId, tamanhoId){
+  const p = ref.precos.find(x => x.sabor_id === saborId && x.tamanho_id === tamanhoId);
+  return p ? Number(p.preco) : null;
+}
+
+function menorPrecoPizza(){
+  // usado só pra mostrar "a partir de R$ X" no card da categoria de pizzas
+  if(ref.precos.length === 0) return null;
+  return Math.min(...ref.precos.map(p => Number(p.preco)));
+}
+
+function renderizarProdutos(){
+  const catObj = ref.categorias.find(c => c.nome === categoriaAtiva);
+  const cont = document.getElementById('listaProdutos');
+  cont.innerHTML = '';
+
+  const nomeLower = (catObj?.nome || '').toLowerCase();
+  const ehPizza = nomeLower.includes('pizza');
+  const ehBebida = nomeLower.includes('bebida');
+  const ehCombo = nomeLower.includes('combo');
+
+  if(ehPizza){
+    const tipoSabor = nomeLower.includes('doce') ? 'doce' : 'salgada';
+    const saboresDaCategoria = ref.sabores.filter(s => s.tipo === tipoSabor);
+    if(saboresDaCategoria.length === 0){
+      cont.innerHTML = '<div class="empty-cat">Nenhum sabor cadastrado nessa categoria ainda.</div>';
+      return;
+    }
+    const precoMin = menorPrecoPizza();
+    const card = document.createElement('div');
+    card.className = 'produto';
+    card.innerHTML = `
+      <div class="produto-info">
+        <div class="produto-nome">${catObj.nome}</div>
+        <div class="produto-desc">Escolha o tamanho, sabor(es) e borda</div>
+        ${precoMin ? `<div class="produto-preco">a partir de ${formatarPreco(precoMin)}</div>` : ''}
+      </div>
+      <button class="btn-add">Montar</button>
+    `;
+    card.querySelector('.btn-add').addEventListener('click', () => abrirMontarPizza(tipoSabor));
+    cont.appendChild(card);
+    return;
+  }
+
+  if(ehBebida){
+    if(ref.bebidas.length === 0){ cont.innerHTML = '<div class="empty-cat">Nenhuma bebida cadastrada ainda.</div>'; return; }
+    ref.bebidas.forEach(b => {
+      const card = document.createElement('div');
+      card.className = 'produto';
+      card.innerHTML = `
+        <div class="produto-info">
+          <div class="produto-nome">${b.nome}</div>
+          <div class="produto-preco">${formatarPreco(b.preco)}</div>
+        </div>
+        <button class="btn-add">Adicionar</button>
+      `;
+      card.querySelector('.btn-add').addEventListener('click', () => {
+        adicionarAoCarrinho({
+          tipo_item:'bebida', bebida_id:b.id, quantidade:1, preco_unitario:Number(b.preco),
+          nomeExibicao:b.nome, detalheExibicao:'', adicionaisSelecionados:[]
+        });
+        avisarAdicionado();
+      });
+      cont.appendChild(card);
+    });
+    return;
+  }
+
+  if(ehCombo){
+    if(ref.combos.length === 0){ cont.innerHTML = '<div class="empty-cat">Nenhum combo cadastrado ainda.</div>'; return; }
+    ref.combos.forEach(c => {
+      const card = document.createElement('div');
+      card.className = 'produto';
+      card.innerHTML = `
+        <div class="produto-info">
+          <div class="produto-nome">${c.nome}</div>
+          ${c.descricao ? `<div class="produto-desc">${c.descricao}</div>` : ''}
+          <div class="produto-preco">${formatarPreco(c.preco)}</div>
+        </div>
+        <button class="btn-add">Adicionar</button>
+      `;
+      card.querySelector('.btn-add').addEventListener('click', () => {
+        adicionarAoCarrinho({
+          tipo_item:'combo', combo_id:c.id, quantidade:1, preco_unitario:Number(c.preco),
+          nomeExibicao:c.nome, detalheExibicao:'', adicionaisSelecionados:[]
+        });
+        avisarAdicionado();
+      });
+      cont.appendChild(card);
+    });
+    return;
+  }
+
+  cont.innerHTML = '<div class="empty-cat">Categoria vazia por enquanto.</div>';
+}
+
+// ---------------- MONTAR PIZZA ----------------
+let pizzaEmMontagem = null;
+
+function abrirMontarPizza(tipoSabor){
+  pizzaEmMontagem = {
+    tipoSabor,
+    tamanho: null,
+    sabor1: null,
+    sabor2: null,
+    meioAMeio: false,
+    borda: null,
+    adicionaisIds: [],
+    quantidade: 1
+  };
+  renderPainelPizza();
+  document.getElementById('overlayPizza').classList.add('mostrar');
+}
+
+function fecharMontarPizza(){
+  document.getElementById('overlayPizza').classList.remove('mostrar');
+}
+
+function calcularPrecoPizzaAtual(){
+  if(!pizzaEmMontagem.tamanho || !pizzaEmMontagem.sabor1) return 0;
+  const p1 = precoBaseSabor(pizzaEmMontagem.sabor1, pizzaEmMontagem.tamanho.id) || 0;
+  let base = p1;
+  if(pizzaEmMontagem.meioAMeio && pizzaEmMontagem.sabor2){
+    const p2 = precoBaseSabor(pizzaEmMontagem.sabor2, pizzaEmMontagem.tamanho.id) || 0;
+    const regra = ref.config.regra_meio_a_meio;
+    base = regra === 'media' ? (p1 + p2) / 2 : Math.max(p1, p2);
+  }
+  const bordaObj = ref.bordas.find(b => b.id === pizzaEmMontagem.borda);
+  const precoBorda = bordaObj ? Number(bordaObj.preco) : 0;
+  const precoAdicionais = pizzaEmMontagem.adicionaisIds
+    .reduce((s, id) => s + Number((ref.adicionais.find(a => a.id === id) || {}).preco || 0), 0);
+  return (base + precoBorda + precoAdicionais) * pizzaEmMontagem.quantidade;
+}
+
+function renderPainelPizza(){
+  const sabores = ref.sabores.filter(s => s.tipo === pizzaEmMontagem.tipoSabor);
+  const podeMeioAMeio = pizzaEmMontagem.tamanho && pizzaEmMontagem.tamanho.max_sabores >= 2;
+
+  const html = `
+    <div class="painel-head">
+      <h2>Montar pizza</h2>
+      <button class="fechar" onclick="fecharMontarPizza()">✕</button>
+    </div>
+
+    <div class="campo">
+      <label>Tamanho</label>
+      <div class="opcoes">
+        ${ref.tamanhos.map(t => `
+          <label class="opcao ${pizzaEmMontagem.tamanho?.id === t.id ? 'selecionada' : ''}" data-tamanho="${t.id}">
+            <input type="radio" name="tamanho" ${pizzaEmMontagem.tamanho?.id === t.id ? 'checked' : ''}>
+            <span class="rotulo">${t.nome}${t.max_sabores >= 2 ? ' (até ' + t.max_sabores + ' sabores)' : ''}</span>
+          </label>
+        `).join('')}
+      </div>
+    </div>
+
+    ${pizzaEmMontagem.tamanho ? `
+    <div class="campo">
+      <label>1º sabor${podeMeioAMeio ? ' (ou único)' : ''}</label>
+      <div class="opcoes">
+        ${sabores.map(s => {
+          const preco = precoBaseSabor(s.id, pizzaEmMontagem.tamanho.id);
+          if(preco === null) return '';
+          return `
+          <label class="opcao ${pizzaEmMontagem.sabor1 === s.id ? 'selecionada' : ''}" data-sabor1="${s.id}">
+            <input type="radio" name="sabor1" ${pizzaEmMontagem.sabor1 === s.id ? 'checked' : ''}>
+            <span class="rotulo">${s.nome}</span>
+            <span class="preco-extra">${formatarPreco(preco)}</span>
+          </label>`;
+        }).join('')}
+      </div>
+    </div>
+    ` : ''}
+
+    ${pizzaEmMontagem.tamanho && podeMeioAMeio && pizzaEmMontagem.sabor1 ? `
+    <div class="campo">
+      <label class="opcao ${pizzaEmMontagem.meioAMeio ? 'selecionada' : ''}" style="margin-bottom:10px;" data-toggle-meio>
+        <input type="checkbox" ${pizzaEmMontagem.meioAMeio ? 'checked' : ''}>
+        <span class="rotulo">Quero meio a meio</span>
+      </label>
+      ${pizzaEmMontagem.meioAMeio ? `
+        <label style="display:block; font-size:13.5px; color:var(--text-dim); margin-bottom:6px;">2º sabor</label>
+        <div class="opcoes">
+          ${sabores.filter(s => s.id !== pizzaEmMontagem.sabor1).map(s => {
+            const preco = precoBaseSabor(s.id, pizzaEmMontagem.tamanho.id);
+            if(preco === null) return '';
+            return `
+            <label class="opcao ${pizzaEmMontagem.sabor2 === s.id ? 'selecionada' : ''}" data-sabor2="${s.id}">
+              <input type="radio" name="sabor2" ${pizzaEmMontagem.sabor2 === s.id ? 'checked' : ''}>
+              <span class="rotulo">${s.nome}</span>
+              <span class="preco-extra">${formatarPreco(preco)}</span>
+            </label>`;
+          }).join('')}
+        </div>
+      ` : ''}
+    </div>
+    ` : ''}
+
+    ${pizzaEmMontagem.sabor1 && ref.bordas.length > 0 ? `
+    <div class="campo">
+      <label>Borda</label>
+      <div class="opcoes">
+        ${ref.bordas.map(b => `
+          <label class="opcao ${pizzaEmMontagem.borda === b.id ? 'selecionada' : ''}" data-borda="${b.id}">
+            <input type="radio" name="borda" ${pizzaEmMontagem.borda === b.id ? 'checked' : ''}>
+            <span class="rotulo">${b.nome}</span>
+            <span class="preco-extra">${Number(b.preco) > 0 ? '+ ' + formatarPreco(b.preco) : 'grátis'}</span>
+          </label>
+        `).join('')}
+      </div>
+    </div>
+    ` : ''}
+
+    ${pizzaEmMontagem.sabor1 && ref.adicionais.length > 0 ? `
+    <div class="campo">
+      <label>Adicionais (opcional)</label>
+      <div class="opcoes">
+        ${ref.adicionais.map(a => `
+          <label class="opcao ${pizzaEmMontagem.adicionaisIds.includes(a.id) ? 'selecionada' : ''}" data-adicional="${a.id}">
+            <input type="checkbox" ${pizzaEmMontagem.adicionaisIds.includes(a.id) ? 'checked' : ''}>
+            <span class="rotulo">${a.nome}</span>
+            <span class="preco-extra">+ ${formatarPreco(a.preco)}</span>
+          </label>
+        `).join('')}
+      </div>
+    </div>
+    ` : ''}
+
+    ${pizzaEmMontagem.sabor1 ? `
+    <div class="campo">
+      <label>Quantidade</label>
+      <div class="stepper">
+        <button data-qtd-menos>−</button>
+        <span>${pizzaEmMontagem.quantidade}</span>
+        <button data-qtd-mais>+</button>
+      </div>
+    </div>
+
+    <div class="resumo-preco">
+      <span>Total</span>
+      <span class="valor">${formatarPreco(calcularPrecoPizzaAtual())}</span>
+    </div>
+
+    <button class="btn-primario" id="btnAdicionarPizza" ${pizzaEmMontagem.meioAMeio && !pizzaEmMontagem.sabor2 ? 'disabled' : ''}>
+      Adicionar ao carrinho
+    </button>
+    ` : ''}
+  `;
+
+  document.getElementById('painelPizza').innerHTML = html;
+  ligarEventosPainelPizza();
+}
+
+function ligarEventosPainelPizza(){
+  const painel = document.getElementById('painelPizza');
+
+  painel.querySelectorAll('[data-tamanho]').forEach(el => el.addEventListener('click', () => {
+    const id = el.getAttribute('data-tamanho');
+    pizzaEmMontagem.tamanho = ref.tamanhos.find(t => t.id === id);
+    pizzaEmMontagem.sabor1 = null; pizzaEmMontagem.sabor2 = null; pizzaEmMontagem.meioAMeio = false;
+    renderPainelPizza();
+  }));
+
+  painel.querySelectorAll('[data-sabor1]').forEach(el => el.addEventListener('click', () => {
+    pizzaEmMontagem.sabor1 = el.getAttribute('data-sabor1');
+    renderPainelPizza();
+  }));
+
+  const toggleMeio = painel.querySelector('[data-toggle-meio]');
+  if(toggleMeio) toggleMeio.addEventListener('click', () => {
+    pizzaEmMontagem.meioAMeio = !pizzaEmMontagem.meioAMeio;
+    pizzaEmMontagem.sabor2 = null;
+    renderPainelPizza();
+  });
+
+  painel.querySelectorAll('[data-sabor2]').forEach(el => el.addEventListener('click', () => {
+    pizzaEmMontagem.sabor2 = el.getAttribute('data-sabor2');
+    renderPainelPizza();
+  }));
+
+  painel.querySelectorAll('[data-borda]').forEach(el => el.addEventListener('click', () => {
+    pizzaEmMontagem.borda = el.getAttribute('data-borda');
+    renderPainelPizza();
+  }));
+
+  painel.querySelectorAll('[data-adicional]').forEach(el => el.addEventListener('click', () => {
+    const id = el.getAttribute('data-adicional');
+    const idx = pizzaEmMontagem.adicionaisIds.indexOf(id);
+    if(idx >= 0) pizzaEmMontagem.adicionaisIds.splice(idx, 1);
+    else pizzaEmMontagem.adicionaisIds.push(id);
+    renderPainelPizza();
+  }));
+
+  const menos = painel.querySelector('[data-qtd-menos]');
+  const mais = painel.querySelector('[data-qtd-mais]');
+  if(menos) menos.addEventListener('click', () => {
+    if(pizzaEmMontagem.quantidade > 1) pizzaEmMontagem.quantidade--;
+    renderPainelPizza();
+  });
+  if(mais) mais.addEventListener('click', () => {
+    pizzaEmMontagem.quantidade++;
+    renderPainelPizza();
+  });
+
+  const btnAdd = document.getElementById('btnAdicionarPizza');
+  if(btnAdd) btnAdd.addEventListener('click', () => {
+    const s1 = ref.sabores.find(s => s.id === pizzaEmMontagem.sabor1);
+    const s2 = pizzaEmMontagem.meioAMeio ? ref.sabores.find(s => s.id === pizzaEmMontagem.sabor2) : null;
+    const bordaObj = ref.bordas.find(b => b.id === pizzaEmMontagem.borda);
+    const nomeAdicionais = pizzaEmMontagem.adicionaisIds.map(id => (ref.adicionais.find(a => a.id === id) || {}).nome).filter(Boolean);
+
+    let nomeExibicao = `Pizza ${pizzaEmMontagem.tamanho.nome} — ${s1.nome}` + (s2 ? ` / ${s2.nome}` : '');
+    let detalhes = [];
+    if(bordaObj && Number(bordaObj.preco) >= 0 && bordaObj.nome !== 'Sem borda') detalhes.push('borda ' + bordaObj.nome);
+    if(nomeAdicionais.length) detalhes.push('+ ' + nomeAdicionais.join(', '));
+
+    const precoUnitario = calcularPrecoPizzaAtual() / pizzaEmMontagem.quantidade;
+
+    adicionarAoCarrinho({
+      tipo_item: 'pizza',
+      tamanho_id: pizzaEmMontagem.tamanho.id,
+      sabor1_id: pizzaEmMontagem.sabor1,
+      sabor2_id: pizzaEmMontagem.meioAMeio ? pizzaEmMontagem.sabor2 : null,
+      borda_id: pizzaEmMontagem.borda,
+      quantidade: pizzaEmMontagem.quantidade,
+      preco_unitario: precoUnitario,
+      nomeExibicao,
+      detalheExibicao: detalhes.join(' · '),
+      adicionaisSelecionados: [...pizzaEmMontagem.adicionaisIds]
+    });
+
+    fecharMontarPizza();
+    avisarAdicionado();
+  });
+}
+
+// ---------------- CARRINHO ----------------
+function adicionarAoCarrinho(item){
+  item.id = 'item_' + Date.now() + '_' + Math.random().toString(36).slice(2,7);
+  carrinho.push(item);
+  atualizarBarraCarrinho();
+}
+
+function removerDoCarrinho(id){
+  carrinho = carrinho.filter(i => i.id !== id);
+  atualizarBarraCarrinho();
+  renderCarrinho();
+}
+
+function totalCarrinho(){
+  return carrinho.reduce((s, i) => s + (i.preco_unitario * i.quantidade), 0);
+}
+
+function atualizarBarraCarrinho(){
+  const barra = document.getElementById('barraCarrinho');
+  const qtd = carrinho.reduce((s, i) => s + i.quantidade, 0);
+  document.getElementById('badgeQtd').textContent = qtd;
+  document.getElementById('totalCarrinho').textContent = formatarPreco(totalCarrinho());
+  barra.classList.toggle('mostrar', qtd > 0);
+}
+
+let toastTimeout = null;
+function avisarAdicionado(){
+  const barra = document.getElementById('barraCarrinho');
+  barra.style.transform = 'scale(1.04)';
+  clearTimeout(toastTimeout);
+  toastTimeout = setTimeout(() => { barra.style.transform = 'scale(1)'; }, 180);
+}
+
+document.getElementById('barraCarrinho').addEventListener('click', () => {
+  renderCarrinho();
+  document.getElementById('overlayCarrinho').classList.add('mostrar');
+});
+
+function fecharCarrinho(){
+  document.getElementById('overlayCarrinho').classList.remove('mostrar');
+}
+
+function renderCarrinho(){
+  const html = `
+    <div class="painel-head">
+      <h2>Seu carrinho</h2>
+      <button class="fechar" onclick="fecharCarrinho()">✕</button>
+    </div>
+    ${carrinho.length === 0 ? '<div class="empty-cat">Carrinho vazio</div>' : carrinho.map(i => `
+      <div class="item-carrinho">
+        <div class="desc">
+          <div class="nome">${i.quantidade}x ${i.nomeExibicao}</div>
+          ${i.detalheExibicao ? `<div class="detalhe">${i.detalheExibicao}</div>` : ''}
+          <button class="remover" data-remover="${i.id}">remover</button>
+        </div>
+        <div class="preco">${formatarPreco(i.preco_unitario * i.quantidade)}</div>
+      </div>
+    `).join('')}
+    ${carrinho.length > 0 ? `
+      <div class="linha-total grande">
+        <span>Total</span>
+        <span class="valor-destaque">${formatarPreco(totalCarrinho())}</span>
+      </div>
+      <button class="btn-primario" id="btnIrCheckout" style="margin-top:16px;">Continuar</button>
+    ` : ''}
+  `;
+  document.getElementById('painelCarrinho').innerHTML = html;
+
+  document.querySelectorAll('[data-remover]').forEach(el => el.addEventListener('click', () => {
+    removerDoCarrinho(el.getAttribute('data-remover'));
+  }));
+  const btnCheckout = document.getElementById('btnIrCheckout');
+  if(btnCheckout) btnCheckout.addEventListener('click', () => {
+    fecharCarrinho();
+    abrirCheckout();
+  });
+}
+
+// ---------------- CHECKOUT ----------------
+let checkoutState = {
+  nome: '', telefone: '', tipoEntrega: 'entrega', areaId: null,
+  endereco: '', numero: '', complemento: '', referencia: '',
+  formaPagamento: null, precisaTroco: false, trocoPara: '', observacoes: ''
+};
+
+function abrirCheckout(){
+  renderCheckout();
+  document.getElementById('overlayCheckout').classList.add('mostrar');
+}
+function fecharCheckout(){
+  document.getElementById('overlayCheckout').classList.remove('mostrar');
+}
+
+function formasPagamentoDisponiveis(){
+  const c = ref.config;
+  const formas = [];
+  if(c.aceita_pix_antecipado) formas.push({id:'pix_antecipado', label:'Pix antecipado'});
+  if(c.aceita_pix_entrega) formas.push({id:'pix_entrega', label:'Pix na entrega'});
+  if(c.aceita_cartao_entrega) formas.push({id:'cartao_entrega', label:'Cartão na entrega'});
+  if(c.aceita_dinheiro) formas.push({id:'dinheiro', label:'Dinheiro na entrega'});
+  return formas;
+}
+
+function taxaEntregaAtual(){
+  if(checkoutState.tipoEntrega === 'retirada') return 0;
+  const area = ref.areasEntrega.find(a => a.id === checkoutState.areaId);
+  return area ? Number(area.taxa) : 0;
+}
+
+function totalComEntrega(){
+  return totalCarrinho() + taxaEntregaAtual();
+}
+
+function checkoutValido(){
+  if(!checkoutState.nome.trim() || checkoutState.telefone.trim().length < 8) return false;
+  if(checkoutState.tipoEntrega === 'entrega'){
+    if(!checkoutState.areaId || !checkoutState.endereco.trim() || !checkoutState.numero.trim()) return false;
+  }
+  if(!checkoutState.formaPagamento) return false;
+  if(checkoutState.formaPagamento === 'dinheiro' && checkoutState.precisaTroco && !checkoutState.trocoPara) return false;
+  return true;
+}
+
+function renderCheckout(){
+  const formas = formasPagamentoDisponiveis();
+  const html = `
+    <div class="painel-head">
+      <h2>Finalizar pedido</h2>
+      <button class="fechar" onclick="fecharCheckout()">✕</button>
+    </div>
+
+    <div class="campo">
+      <label>Seu nome</label>
+      <input type="text" id="inpNome" value="${checkoutState.nome}" placeholder="Como podemos te chamar">
+    </div>
+    <div class="campo">
+      <label>WhatsApp / telefone</label>
+      <input type="tel" id="inpTelefone" value="${checkoutState.telefone}" placeholder="(11) 99999-9999">
+    </div>
+
+    <div class="campo">
+      <label>Como vai ser</label>
+      <div class="grid2">
+        <label class="opcao ${checkoutState.tipoEntrega === 'entrega' ? 'selecionada' : ''}" data-entrega="entrega">
+          <input type="radio" name="tipoEntrega" ${checkoutState.tipoEntrega === 'entrega' ? 'checked' : ''}>
+          <span class="rotulo">🛵 Entrega</span>
+        </label>
+        <label class="opcao ${checkoutState.tipoEntrega === 'retirada' ? 'selecionada' : ''}" data-entrega="retirada">
+          <input type="radio" name="tipoEntrega" ${checkoutState.tipoEntrega === 'retirada' ? 'checked' : ''}>
+          <span class="rotulo">🏠 Retirada</span>
+        </label>
+      </div>
+    </div>
+
+    ${checkoutState.tipoEntrega === 'entrega' ? `
+      <div class="campo">
+        <label>Bairro</label>
+        <select id="inpBairro">
+          <option value="">Selecione...</option>
+          ${ref.areasEntrega.map(a => `<option value="${a.id}" ${checkoutState.areaId === a.id ? 'selected' : ''}>${a.bairro} — taxa ${formatarPreco(a.taxa)}</option>`).join('')}
+        </select>
+      </div>
+      <div class="campo">
+        <label>Endereço</label>
+        <input type="text" id="inpEndereco" value="${checkoutState.endereco}" placeholder="Rua / Avenida">
+      </div>
+      <div class="grid2">
+        <div class="campo">
+          <label>Número</label>
+          <input type="text" id="inpNumero" value="${checkoutState.numero}" placeholder="123">
+        </div>
+        <div class="campo">
+          <label>Complemento</label>
+          <input type="text" id="inpComplemento" value="${checkoutState.complemento}" placeholder="Apto, bloco...">
+        </div>
+      </div>
+      <div class="campo">
+        <label>Ponto de referência (opcional)</label>
+        <input type="text" id="inpReferencia" value="${checkoutState.referencia}" placeholder="Perto de...">
+      </div>
+    ` : ''}
+
+    <div class="campo">
+      <label>Forma de pagamento</label>
+      <div class="opcoes">
+        ${formas.map(f => `
+          <label class="opcao ${checkoutState.formaPagamento === f.id ? 'selecionada' : ''}" data-pagamento="${f.id}">
+            <input type="radio" name="pagamento" ${checkoutState.formaPagamento === f.id ? 'checked' : ''}>
+            <span class="rotulo">${f.label}</span>
+          </label>
+        `).join('')}
+      </div>
+    </div>
+
+    ${checkoutState.formaPagamento === 'dinheiro' ? `
+      <div class="campo">
+        <label class="opcao ${checkoutState.precisaTroco ? 'selecionada' : ''}" data-toggle-troco>
+          <input type="checkbox" ${checkoutState.precisaTroco ? 'checked' : ''}>
+          <span class="rotulo">Vou precisar de troco</span>
+        </label>
+      </div>
+      ${checkoutState.precisaTroco ? `
+        <div class="campo">
+          <label>Troco para quanto?</label>
+          <input type="text" inputmode="decimal" id="inpTroco" value="${checkoutState.trocoPara}" placeholder="Ex: 50">
+        </div>
+      ` : ''}
+    ` : ''}
+
+    <div class="campo">
+      <label>Observações (opcional)</label>
+      <textarea id="inpObs" placeholder="Alguma informação extra sobre o pedido">${checkoutState.observacoes}</textarea>
+    </div>
+
+    <div class="linha-total">
+      <span>Subtotal</span>
+      <span>${formatarPreco(totalCarrinho())}</span>
+    </div>
+    <div class="linha-total">
+      <span>Taxa de entrega</span>
+      <span>${taxaEntregaAtual() > 0 ? formatarPreco(taxaEntregaAtual()) : 'grátis'}</span>
+    </div>
+    <div class="linha-total grande">
+      <span>Total</span>
+      <span class="valor-destaque">${formatarPreco(totalComEntrega())}</span>
+    </div>
+
+    <button class="btn-primario" id="btnConfirmarPedido" ${checkoutValido() ? '' : 'disabled'}>Confirmar pedido</button>
+  `;
+
+  document.getElementById('painelCheckout').innerHTML = html;
+  ligarEventosCheckout();
+}
+
+function ligarEventosCheckout(){
+  const painel = document.getElementById('painelCheckout');
+  const campo = (id, prop) => {
+    const el = document.getElementById(id);
+    if(el) el.addEventListener('input', () => { checkoutState[prop] = el.value; document.getElementById('btnConfirmarPedido').disabled = !checkoutValido(); });
+  };
+  campo('inpNome','nome'); campo('inpTelefone','telefone');
+  campo('inpEndereco','endereco'); campo('inpNumero','numero');
+  campo('inpComplemento','complemento'); campo('inpReferencia','referencia');
+  campo('inpObs','observacoes'); campo('inpTroco','trocoPara');
+
+  const bairroEl = document.getElementById('inpBairro');
+  if(bairroEl) bairroEl.addEventListener('change', () => {
+    checkoutState.areaId = bairroEl.value || null;
+    renderCheckout();
+  });
+
+  painel.querySelectorAll('[data-entrega]').forEach(el => el.addEventListener('click', () => {
+    checkoutState.tipoEntrega = el.getAttribute('data-entrega');
+    renderCheckout();
+  }));
+
+  painel.querySelectorAll('[data-pagamento]').forEach(el => el.addEventListener('click', () => {
+    checkoutState.formaPagamento = el.getAttribute('data-pagamento');
+    if(checkoutState.formaPagamento !== 'dinheiro'){ checkoutState.precisaTroco = false; checkoutState.trocoPara = ''; }
+    renderCheckout();
+  }));
+
+  const toggleTroco = painel.querySelector('[data-toggle-troco]');
+  if(toggleTroco) toggleTroco.addEventListener('click', () => {
+    checkoutState.precisaTroco = !checkoutState.precisaTroco;
+    if(!checkoutState.precisaTroco) checkoutState.trocoPara = '';
+    renderCheckout();
+  });
+
+  const btnConfirmar = document.getElementById('btnConfirmarPedido');
+  if(btnConfirmar) btnConfirmar.addEventListener('click', enviarPedido);
+}
+
+// ---------------- ENVIAR PEDIDO ----------------
+async function enviarPedido(){
+  const btn = document.getElementById('btnConfirmarPedido');
+  btn.disabled = true; btn.textContent = 'Enviando...';
+
+  try {
+    const telefoneNormalizado = checkoutState.telefone.replace(/\D/g, '');
+
+    // 1. cliente: procura por telefone, se não existir cria
+    let clienteId;
+    const { data: clienteExistente } = await client.from('clientes').select('id').eq('telefone', telefoneNormalizado).maybeSingle();
+    if(clienteExistente){
+      clienteId = clienteExistente.id;
+      await client.from('clientes').update({nome: checkoutState.nome}).eq('id', clienteId);
+    } else {
+      const { data: novoCliente, error: erroCliente } = await client.from('clientes')
+        .insert({nome: checkoutState.nome, telefone: telefoneNormalizado}).select('id').single();
+      if(erroCliente) throw erroCliente;
+      clienteId = novoCliente.id;
+    }
+
+    // 2. endereço (só se for entrega)
+    let enderecoId = null;
+    if(checkoutState.tipoEntrega === 'entrega'){
+      const area = ref.areasEntrega.find(a => a.id === checkoutState.areaId);
+      const { data: novoEndereco, error: erroEndereco } = await client.from('enderecos_clientes').insert({
+        cliente_id: clienteId, endereco: checkoutState.endereco, numero: checkoutState.numero,
+        complemento: checkoutState.complemento, bairro: area ? area.bairro : '', referencia: checkoutState.referencia
+      }).select('id').single();
+      if(erroEndereco) throw erroEndereco;
+      enderecoId = novoEndereco.id;
+    }
+
+    // 3. pedido
+    const trocoParaNum = checkoutState.precisaTroco ? parseFloat(checkoutState.trocoPara.replace(',', '.')) : null;
+    const totalFinal = totalComEntrega();
+    const { data: novoPedido, error: erroPedido } = await client.from('pedidos').insert({
+      cliente_id: clienteId,
+      endereco_id: enderecoId,
+      tipo_entrega: checkoutState.tipoEntrega,
+      status: 'enviado_cozinha',
+      forma_pagamento: checkoutState.formaPagamento,
+      pagamento_status: checkoutState.formaPagamento === 'pix_antecipado' ? 'confirmado' : 'pendente',
+      precisa_troco: !!checkoutState.precisaTroco,
+      troco_para: trocoParaNum,
+      troco_calculado: trocoParaNum ? (trocoParaNum - totalFinal) : null,
+      taxa_entrega: taxaEntregaAtual(),
+      valor_total: totalFinal,
+      observacoes: checkoutState.observacoes || null
+    }).select('id,numero').single();
+    if(erroPedido) throw erroPedido;
+
+    // 4. itens do pedido
+    for(const item of carrinho){
+      const { data: novoItem, error: erroItem } = await client.from('itens_pedido').insert({
+        pedido_id: novoPedido.id,
+        tipo_item: item.tipo_item,
+        tamanho_id: item.tamanho_id || null,
+        sabor1_id: item.sabor1_id || null,
+        sabor2_id: item.sabor2_id || null,
+        borda_id: item.borda_id || null,
+        bebida_id: item.bebida_id || null,
+        combo_id: item.combo_id || null,
+        quantidade: item.quantidade,
+        preco_unitario: item.preco_unitario
+      }).select('id').single();
+      if(erroItem) throw erroItem;
+
+      if(item.adicionaisSelecionados && item.adicionaisSelecionados.length){
+        const linhas = item.adicionaisSelecionados.map(adId => ({item_pedido_id: novoItem.id, adicional_id: adId, quantidade: 1}));
+        await client.from('itens_pedido_adicionais').insert(linhas);
+      }
+    }
+
+    // sucesso
+    fecharCheckout();
+    document.getElementById('numeroConfirmado').textContent = '#' + novoPedido.numero;
+    document.getElementById('telaConfirmacao').classList.add('mostrar');
+    carrinho = [];
+    atualizarBarraCarrinho();
+
+  } catch(e){
+    alert('Não consegui enviar seu pedido. Verifica a internet e tenta de novo.');
+    btn.disabled = false; btn.textContent = 'Confirmar pedido';
+  }
+}
+
+// ---------------- INICIALIZAÇÃO ----------------
+carregarCardapio();
+</script>
+
+</body>
+</html>
+
+
+
