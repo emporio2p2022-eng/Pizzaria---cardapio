@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="pt-BR" translate="no">
+<head>
+<meta charset="UTF-8">
+<meta name="google" content="notranslate">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Entregas — Pizzaria</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<style>
+  :root{
+    --bg: #FAF6EC;
+    --bg-elev: #FFFFFF;
+    --card: #FFFFFF;
+    --card-border: #EEE3CE;
+    --text: #221C16;
+    --text-dim: #7A6E5E;
+    --text-faint: #A89A85;
+    --gold: #C9860B;
+    --gold-2: #A96C08;
+    --gold-bg: rgba(201,134,11,0.14);
+    --emerald: #2E9E5B;
+    --emerald-2: #227A46;
+    --emerald-bg: rgba(46,158,91,0.12);
+    --alerta: #E85D3F;
+    --shadow-sm: 0 2px 10px rgba(60,45,25,0.07);
+    --shadow-md: 0 10px 24px -8px rgba(60,45,25,0.16);
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color: transparent;}
+  html,body{margin:0; padding:0; min-height:100%; background:var(--bg); color:var(--text); font-family:'Inter',sans-serif;}
+
+  /* ---------- TELA DE LOGIN ---------- */
+  #login{
+    min-height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    padding:24px; text-align:center;
+    background-image: radial-gradient(circle at 20% 10%, rgba(201,134,11,0.12) 0%, transparent 40%),
+      radial-gradient(circle at 90% 90%, rgba(46,158,91,0.10) 0%, transparent 40%);
+  }
+  #login .moto{
+    font-size:40px; margin-bottom:14px; width:78px; height:78px; border-radius:22px;
+    background:linear-gradient(155deg, var(--gold) 0%, var(--gold-2) 100%);
+    display:flex; align-items:center; justify-content:center;
+    box-shadow:0 14px 26px -8px rgba(201,134,11,0.5);
+  }
+  #login h1{font-family:'Oswald',sans-serif; font-size:24px; font-weight:700; margin:0 0 4px; color:var(--text);}
+  #login p{color:var(--text-dim); font-size:14px; margin:0 0 28px;}
+  .lista-motoboys{width:100%; max-width:340px; display:flex; flex-direction:column; gap:10px;}
+  .btn-motoboy{
+    background:var(--card); border:1px solid var(--card-border); color:var(--text);
+    padding:16px; border-radius:14px; font-size:16px; font-weight:700;
+    font-family:'Oswald',sans-serif; cursor:pointer; text-align:left;
+    display:flex; align-items:center; gap:12px; box-shadow:var(--shadow-sm);
+    transition:transform 0.15s ease, border-color 0.15s ease;
+  }
+  .btn-motoboy:active{background:var(--gold-bg); border-color:var(--gold); transform:scale(0.98);}
+  .avatar-letra{
+    width:36px; height:36px; border-radius:50%;
+    background:linear-gradient(155deg, var(--gold) 0%, var(--gold-2) 100%); color:#fff;
+    display:flex; align-items:center; justify-content:center; font-weight:700; flex-shrink:0;
+  }
+  .sem-motoboy{color:var(--text-faint); font-size:14px; line-height:1.5; max-width:320px;}
+
+  /* ---------- TELA PRINCIPAL ---------- */
+  #app{display:none; min-height:100vh;}
+  header{
+    display:flex; align-items:center; justify-content:space-between;
+    padding: 14px 18px; background:var(--bg-elev);
+    border-bottom:1px solid var(--card-border); position:sticky; top:0; z-index:5;
+    box-shadow:var(--shadow-sm);
+  }
+  .brand{display:flex; align-items:center; gap:10px;}
+  .brand h1{font-family:'Oswald',sans-serif; font-weight:700; font-size:19px; margin:0; color:var(--text);}
+  .dot{width:9px; height:9px; border-radius:50%; background:var(--text-faint); flex-shrink:0;}
+  .dot.online{background:var(--emerald); box-shadow:0 0 8px var(--emerald);}
+  .sair{background:none; border:none; color:var(--text-faint); font-size:13px; cursor:pointer;}
+
+  main{padding:16px; max-width:640px; margin:0 auto;}
+  .secao{margin-bottom:26px;}
+  .secao-head{
+    display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;
+  }
+  .secao-head h2{font-family:'Oswald',sans-serif; font-size:17px; font-weight:700; margin:0; color:var(--text);}
+  .secao-head .count{
+    font-family:'Oswald',sans-serif; font-weight:700; font-size:14px;
+    background:var(--gold-bg); color:var(--gold-2); width:26px; height:26px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .empty{color:var(--text-faint); text-align:center; padding:24px 10px; font-size:14px;
+    background:var(--card); border-radius:14px; border:1.5px dashed var(--card-border);}
+
+  .card{
+    background:var(--card); border:1px solid var(--card-border); border-radius:16px;
+    padding:16px; margin-bottom:12px; border-left:4px solid var(--text-faint);
+    box-shadow:var(--shadow-sm);
+  }
+  .disponivel .card{border-left-color:var(--gold);}
+  .minhas .card{border-left-color:var(--emerald);}
+
+  .card-top{display:flex; align-items:baseline; justify-content:space-between; margin-bottom:10px;}
+  .numero{font-family:'Oswald',sans-serif; font-size:22px; font-weight:700; color:var(--text);}
+  .tempo{font-size:13px; color:var(--text-dim); font-weight:600;}
+
+  .endereco{
+    font-size:16px; font-weight:700; line-height:1.4; margin-bottom:4px; color:var(--text);
+  }
+  .bairro{font-size:13.5px; color:var(--text-dim); margin-bottom:12px;}
+
+  .linha{display:flex; align-items:center; gap:8px; font-size:14px; margin-bottom:8px; color:var(--text);}
+  .linha a{color:var(--gold-2); text-decoration:none; font-weight:700;}
+
+  .pagamento{
+    background:rgba(201,134,11,0.12); border:1px solid rgba(201,134,11,0.35);
+    border-radius:10px; padding:10px 12px; margin:10px 0; font-size:14px;
+  }
+  .pagamento .valor{font-family:'Oswald',sans-serif; font-size:19px; font-weight:700; color:var(--gold-2);}
+  .pagamento .troco{color:var(--alerta); font-weight:700; margin-top:2px;}
+  .pagamento.ok{background:var(--emerald-bg); border-color:rgba(46,158,91,0.35);}
+  .pagamento.ok .valor{color:var(--emerald);}
+
+  .itens-resumo{font-size:13.5px; color:var(--text-dim); margin-bottom:10px;}
+
+  .obs{
+    background:rgba(232,93,63,0.12); border:1px solid rgba(232,93,63,0.35); color:#B23A2E;
+    padding:8px 10px; border-radius:8px; font-size:13.5px; margin-bottom:12px; font-weight:600;
+  }
+
+  .acoes-card{display:flex; gap:8px;}
+
+  button.acao{
+    flex:1; border:none; border-radius:10px; padding:14px;
+    font-family:'Oswald',sans-serif; font-size:15.5px; font-weight:700;
+    letter-spacing:0.3px; cursor:pointer; color:#fff; transition:transform 0.15s ease;
+  }
+  .disponivel button.acao{background:linear-gradient(155deg, var(--gold) 0%, var(--gold-2) 100%); box-shadow:0 8px 16px -6px rgba(201,134,11,0.5);}
+  .minhas button.acao{background:linear-gradient(155deg, var(--emerald) 0%, var(--emerald-2) 100%); box-shadow:0 8px 16px -6px rgba(46,158,91,0.45);}
+  button.acao:active{transform:scale(0.97);}
+  button.acao:disabled{opacity:0.6;}
+
+  button.btn-imprimir{
+    flex-shrink:0; width:46px; border:1px solid var(--card-border); border-radius:10px;
+    background:var(--bg); color:var(--text-dim); font-size:17px; cursor:pointer;
+    transition:transform 0.15s ease, border-color 0.15s ease;
+  }
+  button.btn-imprimir:active{transform:scale(0.94);}
+  button.btn-imprimir:hover{border-color:var(--text-dim);}
+
+  button.btn-whatsapp{
+    flex-shrink:0; width:46px; border:1px solid rgba(46,158,91,0.35); border-radius:10px;
+    background:var(--emerald-bg); color:var(--emerald); font-size:17px; cursor:pointer;
+    transition:transform 0.15s ease;
+  }
+  button.btn-whatsapp:active{transform:scale(0.94);}
+</style>
+</head>
+<body>
+<div id="pwGate" style="position:fixed;inset:0;z-index:99999;background:#1c1310;display:flex;align-items:center;justify-content:center;padding:24px;font-family:sans-serif;">
+  <div style="width:100%;max-width:320px;text-align:center;">
+    <div style="font-size:40px;margin-bottom:12px;">🔒</div>
+    <div style="color:#f3e7d9;font-size:18px;font-weight:600;margin-bottom:18px;">Acesso restrito — Pizzaria 2P</div>
+    <input id="pwInput" type="password" placeholder="Senha" autocomplete="off"
+      style="width:100%;padding:14px;border-radius:10px;border:1px solid #3a2a22;background:#271b17;color:#f3e7d9;font-size:16px;text-align:center;margin-bottom:12px;box-sizing:border-box;">
+    <button id="pwBtn" style="width:100%;padding:14px;border-radius:10px;border:none;background:#e2683f;color:#fff;font-size:16px;font-weight:600;">Entrar</button>
+    <div id="pwErr" style="color:#e2683f;font-size:13px;margin-top:10px;display:none;">Senha errada, tenta de novo.</div>
+  </div>
+</div>
+<script>
+(function(){
+  var KEY = 'pizza2p_auth_v1';
+  var SENHA = '2p2026';
+  if(localStorage.getItem(KEY) === 'ok'){
+    document.getElementById('pwGate').remove();
+    return;
+  }
+  function tentar(){
+    var val = document.getElementById('pwInput').value.trim();
+    if(val === SENHA){
+      localStorage.setItem(KEY, 'ok');
+      document.getElementById('pwGate').remove();
+    } else {
+      document.getElementById('pwErr').style.display = 'block';
+    }
+  }
+  document.getElementById('pwBtn').addEventListener('click', tentar);
+  document.getElementById('pwInput').addEventListener('keydown', function(e){
+    if(e.key === 'Enter') tentar();
+  });
+})();
+</script>
+
+
+<!-- LOGIN -->
+<div id="login">
+  <div class="moto">🛵</div>
+  <h1 id="nomePizzariaLogin">Entregas</h1>
+  <p>Quem é você?</p>
+  <div class="lista-motoboys" id="listaMotoboys">
+    <div class="sem-motoboy">Carregando...</div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <header>
+    <div class="brand">
+      <h1 id="nomeMotoboy">Motoboy</h1>
+      <div class="dot" id="connDot"></div>
+    </div>
+    <button class="sair" id="btnSair">trocar</button>
+  </header>
+
+  <main>
+    <div class="secao disponivel">
+      <div class="secao-head"><h2>Disponíveis para pegar</h2><span class="count" id="countDisp">0</span></div>
+      <div id="colDisponiveis"></div>
+    </div>
+
+    <div class="secao minhas">
+      <div class="secao-head"><h2>Minhas entregas</h2><span class="count" id="countMinhas">0</span></div>
+      <div id="colMinhas"></div>
+    </div>
+  </main>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://udqsxybmoomokgmhhubh.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_y-3D9y_mQP5SvmUbVmbClg_5YSgU2sX';
+const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+let motoboyAtual = null; // {id, nome}
+let primeiraCarga = true;
+
+async function carregarNomePizzaria(){
+  const {data} = await client.from('config_sistema').select('nome_pizzaria').eq('id',1).single();
+  if(data && data.nome_pizzaria){
+    document.getElementById('nomePizzariaLogin').textContent = 'Entregas — ' + data.nome_pizzaria;
+  }
+}
+
+async function carregarMotoboys(){
+  const {data, error} = await client.from('motoboys').select('id,nome').eq('ativo', true).order('nome');
+  const lista = document.getElementById('listaMotoboys');
+  lista.innerHTML = '';
+
+  if(error || !data || data.length === 0){
+    lista.innerHTML = `<div class="sem-motoboy">Nenhum motoboy cadastrado ainda.<br><br>Peça pro dono cadastrar os motoboys no painel de administração.</div>`;
+    return;
+  }
+
+  data.forEach(m => {
+    const btn = document.createElement('button');
+    btn.className = 'btn-motoboy';
+    btn.innerHTML = `<span class="avatar-letra">${m.nome.charAt(0).toUpperCase()}</span> ${m.nome}`;
+    btn.addEventListener('click', () => entrar(m));
+    lista.appendChild(btn);
+  });
+}
+
+function entrar(motoboy){
+  motoboyAtual = motoboy;
+  localStorage.setItem('motoboy_id', motoboy.id);
+  localStorage.setItem('motoboy_nome', motoboy.nome);
+  document.getElementById('login').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  document.getElementById('nomeMotoboy').textContent = motoboy.nome;
+  iniciarApp();
+}
+
+document.getElementById('btnSair').addEventListener('click', () => {
+  localStorage.removeItem('motoboy_id');
+  localStorage.removeItem('motoboy_nome');
+  location.reload();
+});
+
+function tempoDecorrido(criadoEm){
+  const min = Math.floor((Date.now() - new Date(criadoEm).getTime()) / 60000);
+  if(min < 1) return 'agora';
+  return `há ${min} min`;
+}
+
+function infoPagamento(pedido){
+  if(pedido.forma_pagamento === 'pix_antecipado' || pedido.pagamento_status === 'confirmado'){
+    return `<div class="pagamento ok">✓ Já pago (${formaLabel(pedido.forma_pagamento)})</div>`;
+  }
+  const valor = Number(pedido.valor_total || 0).toFixed(2).replace('.', ',');
+  let troco = '';
+  if(pedido.forma_pagamento === 'dinheiro' && pedido.precisa_troco && pedido.troco_para){
+    const trocoCalc = pedido.troco_calculado != null
+      ? Number(pedido.troco_calculado).toFixed(2).replace('.', ',')
+      : (Number(pedido.troco_para) - Number(pedido.valor_total)).toFixed(2).replace('.', ',');
+    troco = `<div class="troco">Cliente vai pagar com R$ ${Number(pedido.troco_para).toFixed(2).replace('.', ',')} — levar R$ ${trocoCalc} de troco</div>`;
+  }
+  return `<div class="pagamento"><div class="valor">Cobrar R$ ${valor}</div>${formaLabel(pedido.forma_pagamento)}${troco}</div>`;
+}
+
+function formaLabel(forma){
+  const nomes = {
+    'pix_antecipado': 'Pix (já pago)',
+    'pix_entrega': 'Pix na entrega',
+    'cartao_entrega': 'Cartão na entrega',
+    'dinheiro': 'Dinheiro na entrega'
+  };
+  return nomes[forma] || forma || '';
+}
+
+// ---------------- COMPROVANTE DE ENTREGA (impressão + compartilhamento) ----------------
+function montarConteudoComprovante(pedido){
+  const end = pedido.enderecos_clientes || {};
+  const cli = pedido.clientes || {};
+  const agora = new Date().toLocaleString('pt-BR');
+
+  const valor = Number(pedido.valor_total || 0).toFixed(2).replace('.', ',');
+  const jaPago = pedido.forma_pagamento === 'pix_antecipado' || pedido.pagamento_status === 'confirmado';
+  const corPagamento = jaPago ? '#2E9E5B' : '#C9860B';
+  const bgPagamento = jaPago ? '#EAF7EF' : '#FFF6E0';
+  let linhaPagamento = jaPago
+    ? `✓ Já pago — ${formaLabel(pedido.forma_pagamento)}`
+    : `Cobrar R$ ${valor} — ${formaLabel(pedido.forma_pagamento)}`;
+  let linhaTroco = '';
+  if(!jaPago && pedido.forma_pagamento === 'dinheiro' && pedido.precisa_troco && pedido.troco_para){
+    const trocoCalc = pedido.troco_calculado != null
+      ? Number(pedido.troco_calculado).toFixed(2).replace('.', ',')
+      : (Number(pedido.troco_para) - Number(pedido.valor_total)).toFixed(2).replace('.', ',');
+    linhaTroco = `<div style="font-size:12.5px; margin-top:4px;">Troco pra R$ ${Number(pedido.troco_para).toFixed(2).replace('.', ',')} — levar R$ ${trocoCalc}</div>`;
+  }
+
+  return `
+    <div style="font-family:'Inter',sans-serif; width:320px; background:#FFFFFF; border-radius:20px; overflow:hidden; box-shadow:0 10px 30px rgba(0,0,0,0.15);">
+      <div style="background:linear-gradient(155deg,#C9860B 0%,#A96C08 100%); padding:18px 20px; text-align:center;">
+        <div style="color:#fff; font-family:'Oswald',sans-serif; font-size:13px; letter-spacing:1px; text-transform:uppercase; opacity:0.9;">Pizza Card — Entrega</div>
+        <div style="color:#fff; font-family:'Oswald',sans-serif; font-size:38px; font-weight:700; line-height:1.1;">#${pedido.numero}</div>
+        <div style="color:#FBEBCB; font-size:12px; margin-top:2px;">${agora}</div>
+      </div>
+      <div style="padding:18px 20px;">
+        <div style="font-size:11px; text-transform:uppercase; color:#A89A85; font-weight:700; margin-bottom:4px;">Endereço</div>
+        <div style="font-size:17px; font-weight:700; color:#221C16; line-height:1.35;">${end.endereco || ''}${end.numero ? ', ' + end.numero : ''}</div>
+        <div style="font-size:13.5px; color:#7A6E5E; margin-bottom:12px;">${end.bairro || ''}${end.complemento ? ' · ' + end.complemento : ''}</div>
+        ${cli.telefone ? `<div style="font-size:14px; color:#221C16; margin-bottom:12px;">📞 ${cli.telefone}</div>` : ''}
+        <div style="background:${bgPagamento}; border-radius:10px; padding:10px 12px; font-size:14px; font-weight:700; color:${corPagamento};">
+          ${linhaPagamento}${linhaTroco}
+        </div>
+        ${pedido.observacoes ? `<div style="background:#FFF6E0; border:1px solid #F0DFAE; color:#8A5D07; padding:10px 12px; border-radius:10px; font-size:13px; font-weight:600; margin-top:12px;">⚠ ${pedido.observacoes}</div>` : ''}
+      </div>
+      <div style="background:#FAF6EC; text-align:center; padding:10px; font-size:11px; color:#A89A85; font-weight:600;">O sabor de vender sem complicação</div>
+    </div>
+  `;
+}
+
+function imprimirComprovante(pedido){
+  const conteudo = montarConteudoComprovante(pedido);
+  const janela = window.open('', '_blank', 'width=400,height=650');
+  if(!janela){ alert('Permite pop-ups pra imprimir o comprovante.'); return; }
+
+  janela.document.write(`
+    <!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">
+    <title>Entrega #${pedido.numero}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+      * { box-sizing:border-box; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+      body{ margin:0; padding:20px; background:#FAF6EC; display:flex; justify-content:center; }
+    </style>
+    </head><body>${conteudo}</body></html>
+  `);
+  janela.document.close();
+  janela.focus();
+  setTimeout(() => { janela.print(); }, 400);
+}
+
+async function compartilharComprovanteWhatsApp(pedido){
+  const conteudo = montarConteudoComprovante(pedido);
+  const offscreen = document.createElement('div');
+  offscreen.style.cssText = 'position:fixed; left:-9999px; top:0;';
+  offscreen.innerHTML = conteudo;
+  document.body.appendChild(offscreen);
+
+  try {
+    const canvas = await html2canvas(offscreen.firstElementChild, {scale:2, backgroundColor:'#FFFFFF'});
+    canvas.toBlob(async (blob) => {
+      document.body.removeChild(offscreen);
+      if(!blob) return;
+      const arquivo = new File([blob], `entrega-${pedido.numero}.png`, {type:'image/png'});
+
+      if(navigator.canShare && navigator.canShare({files:[arquivo]})){
+        try {
+          await navigator.share({files:[arquivo], title:`Entrega #${pedido.numero}`});
+        } catch(e){ /* usuário cancelou, tudo bem */ }
+      } else {
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `entrega-${pedido.numero}.png`;
+        link.click();
+        alert('Imagem baixada. Envie ela pelo WhatsApp manualmente.');
+      }
+    }, 'image/png');
+  } catch(e){
+    document.body.removeChild(offscreen);
+    alert('Não consegui gerar a imagem do comprovante.');
+  }
+}
+
+function criarCardDisponivel(pedido){
+  const card = document.createElement('div');
+  card.className = 'card';
+  const end = pedido.enderecos_clientes || {};
+  const cli = pedido.clientes || {};
+  const nItens = (pedido.itens_pedido || []).length;
+
+  card.innerHTML = `
+    <div class="card-top">
+      <span class="numero">#${pedido.numero}</span>
+      <span class="tempo">pronto ${tempoDecorrido(pedido.atualizado_em || pedido.criado_em)}</span>
+    </div>
+    <div class="endereco">${end.endereco || ''}${end.numero ? ', ' + end.numero : ''}</div>
+    <div class="bairro">${end.bairro || ''}${end.complemento ? ' · ' + end.complemento : ''}</div>
+    <div class="itens-resumo">${nItens} ${nItens === 1 ? 'item' : 'itens'}</div>
+    ${infoPagamento(pedido)}
+    ${pedido.observacoes ? `<div class="obs">⚠️ ${pedido.observacoes}</div>` : ''}
+    <div class="acoes-card">
+      <button class="btn-imprimir" title="Imprimir comprovante">🖨️</button>
+      <button class="btn-whatsapp" title="Enviar no WhatsApp">📲</button>
+      <button class="acao">Pegar essa entrega</button>
+    </div>
+  `;
+
+  card.querySelector('button.btn-imprimir').addEventListener('click', (ev) => {
+    ev.stopPropagation();
+    imprimirComprovante(pedido);
+  });
+
+  card.querySelector('button.btn-whatsapp').addEventListener('click', (ev) => {
+    ev.stopPropagation();
+    compartilharComprovanteWhatsApp(pedido);
+  });
+
+  card.querySelector('button.acao').addEventListener('click', async () => {
+    const btn = card.querySelector('button.acao');
+    if(btn.disabled) return;
+    btn.disabled = true; btn.textContent = 'Pegando...';
+    const {error} = await client.from('pedidos')
+      .update({status: 'saiu_entrega', motoboy_id: motoboyAtual.id})
+      .eq('id', pedido.id)
+      .eq('status', 'aguardando_motoboy'); // evita dois motoboys pegarem o mesmo pedido
+    if(error){
+      alert('Não consegui pegar essa entrega. Talvez outro motoboy já tenha pegado — a tela vai atualizar.');
+      btn.disabled = false; btn.textContent = 'Pegar essa entrega';
+      carregarPedidos().catch(() => {});
+      return;
+    }
+    btn.textContent = 'Feito ✓';
+    card.style.transition = 'opacity 0.3s';
+    card.style.opacity = '0.3';
+    setTimeout(() => card.remove(), 450);
+    carregarPedidos().catch(() => {});
+  });
+
+  return card;
+}
+
+function criarCardMinha(pedido){
+  const card = document.createElement('div');
+  card.className = 'card';
+  const end = pedido.enderecos_clientes || {};
+  const cli = pedido.clientes || {};
+
+  card.innerHTML = `
+    <div class="card-top">
+      <span class="numero">#${pedido.numero}</span>
+      <span class="tempo">saiu ${tempoDecorrido(pedido.atualizado_em || pedido.criado_em)}</span>
+    </div>
+    <div class="endereco">${end.endereco || ''}${end.numero ? ', ' + end.numero : ''}</div>
+    <div class="bairro">${end.bairro || ''}${end.complemento ? ' · ' + end.complemento : ''}</div>
+    ${cli.telefone ? `<div class="linha">📞 <a href="tel:${cli.telefone}">${cli.telefone}</a></div>` : ''}
+    ${infoPagamento(pedido)}
+    ${pedido.observacoes ? `<div class="obs">⚠️ ${pedido.observacoes}</div>` : ''}
+    <div class="acoes-card">
+      <button class="btn-imprimir" title="Imprimir comprovante">🖨️</button>
+      <button class="btn-whatsapp" title="Enviar no WhatsApp">📲</button>
+      <button class="acao">Confirmar entrega</button>
+    </div>
+  `;
+
+  card.querySelector('button.btn-imprimir').addEventListener('click', (ev) => {
+    ev.stopPropagation();
+    imprimirComprovante(pedido);
+  });
+
+  card.querySelector('button.btn-whatsapp').addEventListener('click', (ev) => {
+    ev.stopPropagation();
+    compartilharComprovanteWhatsApp(pedido);
+  });
+
+  card.querySelector('button.acao').addEventListener('click', async () => {
+    const btn = card.querySelector('button.acao');
+    if(btn.disabled) return;
+    btn.disabled = true; btn.textContent = 'Confirmando...';
+    const updates = {status: 'entregue'};
+    if(pedido.forma_pagamento !== 'pix_antecipado'){
+      updates.pagamento_status = 'confirmado';
+    }
+    const {error} = await client.from('pedidos').update(updates).eq('id', pedido.id);
+    if(error){
+      alert('Não consegui confirmar. Verifica a internet e tenta de novo.');
+      btn.disabled = false; btn.textContent = 'Confirmar entrega';
+      return;
+    }
+    btn.textContent = 'Feito ✓';
+    card.style.transition = 'opacity 0.3s';
+    card.style.opacity = '0.3';
+    setTimeout(() => card.remove(), 450);
+    carregarPedidos().catch(() => {});
+  });
+
+  return card;
+}
+
+async function carregarPedidos(){
+  const [disp, minhas] = await Promise.all([
+    client.from('pedidos')
+      .select('*, enderecos_clientes(endereco,numero,bairro,complemento), clientes(nome,telefone), itens_pedido(id)')
+      .eq('status', 'aguardando_motoboy')
+      .order('atualizado_em', {ascending:true}),
+    client.from('pedidos')
+      .select('*, enderecos_clientes(endereco,numero,bairro,complemento), clientes(nome,telefone), itens_pedido(id)')
+      .eq('status', 'saiu_entrega')
+      .eq('motoboy_id', motoboyAtual.id)
+      .order('atualizado_em', {ascending:true})
+  ]);
+
+  document.getElementById('connDot').className = 'dot online';
+
+  const colDisp = document.getElementById('colDisponiveis');
+  const colMinhas = document.getElementById('colMinhas');
+  colDisp.innerHTML = ''; colMinhas.innerHTML = '';
+
+  const listaDisp = disp.data || [];
+  const listaMinhas = minhas.data || [];
+
+  if(listaDisp.length === 0){
+    colDisp.innerHTML = '<div class="empty">Nenhuma entrega disponível agora</div>';
+  } else {
+    listaDisp.forEach(p => colDisp.appendChild(criarCardDisponivel(p)));
+  }
+
+  if(listaMinhas.length === 0){
+    colMinhas.innerHTML = '<div class="empty">Você não tem entregas em andamento</div>';
+  } else {
+    listaMinhas.forEach(p => colMinhas.appendChild(criarCardMinha(p)));
+  }
+
+  document.getElementById('countDisp').textContent = listaDisp.length;
+  document.getElementById('countMinhas').textContent = listaMinhas.length;
+  primeiraCarga = false;
+}
+
+function iniciarApp(){
+  carregarPedidos();
+
+  client
+    .channel('motoboy-pedidos-' + motoboyAtual.id)
+    .on('postgres_changes', {event:'*', schema:'public', table:'pedidos'}, () => carregarPedidos())
+    .subscribe((status) => {
+      if(status === 'SUBSCRIBED') document.getElementById('connDot').className = 'dot online';
+    });
+
+  document.addEventListener('visibilitychange', () => {
+    if(document.visibilityState === 'visible' && !primeiraCarga) carregarPedidos();
+  });
+
+  setInterval(() => { if(!primeiraCarga) carregarPedidos(); }, 30000);
+}
+
+// inicialização — se já tem motoboy salvo no celular, entra direto
+(async () => {
+  await carregarNomePizzaria();
+  await carregarMotoboys();
+
+  const idSalvo = localStorage.getItem('motoboy_id');
+  const nomeSalvo = localStorage.getItem('motoboy_nome');
+  if(idSalvo && nomeSalvo){
+    entrar({id: idSalvo, nome: nomeSalvo});
+  }
+})();
+</script>
+
+</body>
+</html>
